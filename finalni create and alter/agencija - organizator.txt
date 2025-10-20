@@ -1,0 +1,48 @@
+CREATE TABLE AGENCIJA_ORGANIZATOR
+(
+    "ID"     NUMBER,
+    "NAZIV"  VARCHAR2(100 BYTE),
+    "ADRESA" VARCHAR2(200 BYTE)
+)
+
+//sekvence i triger//
+
+CREATE SEQUENCE AGENCIJA_ORGANIZATOR_PK START WITH 1 INCREMENT BY 1;
+
+CREATE OR REPLACE TRIGGER "S19184"."AGENCIJA_ORGANIZATOR_PK" 
+before insert on AGENCIJA_ORGANIZATOR
+referencing new as new
+for each row
+begin
+    select AGENCIJA_ORGANIZATOR_PK.nextval
+    into: new.ID
+    from dual;
+end;
+
+ALTER TRIGGER "S19184"."AGENCIJA_ORGANIZATOR_PK" ENABLE;
+//podrazumevano je enable, moze da se napise a i ne mora
+
+//keys i null//
+//moglo je odmah da se napise kod create not null/ null//
+
+ALTER TABLE AGENCIJA_ORGANIZATOR MODIFY ("ADRESA" NOT NULL ENABLE);
+ALTER TABLE AGENCIJA_ORGANIZATOR MODIFY ("NAZIV" NOT NULL ENABLE);
+ALTER TABLE AGENCIJA_ORGANIZATOR MODIFY ("ID" NOT NULL ENABLE);
+ALTER TABLE AGENCIJA_ORGANIZATOR ADD CONSTRAINT "PK_AGENCIJA_ORGANIZATOR" PRIMARY KEY ("ID");
+
+//constraints//
+//da agencije budu jedinstvene po nazivu, da ne mogu vise agencija sa isti naziv// 
+ALTER TABLE AGENCIJA_ORGANIZATOR ADD CONSTRAINT "UQ_AGENCIJA_NAZIV" UNIQUE ("NAZIV");
+
+//da naziv nema prazne stringove, i da moze samo slova//
+ALTER TABLE AGENCIJA_ORGANIZATOR ADD CONSTRAINT "CK_AGENCIJA_NAZIV_FORMAT" CHECK (
+    REGEXP_LIKE(TRIM(NAZIV), '^[A-Za-zčćšđžČĆŠĐŽ]+([ ][A-Za-zčćšđžČĆŠĐŽ]+)*$')
+);
+
+//da adresa bas bude u formi adresa//
+ALTER TABLE AGENCIJA_ORGANIZATOR ADD CONSTRAINT "CK_AGENCIJA_ADRESA_FORMAT" CHECK (
+    REGEXP_LIKE(
+        TRIM(ADRESA),
+        '^([A-ZČĆŠĐŽ][a-zA-ZčćšđžČĆŠĐŽ\.\-]+)(\s[A-ZČĆŠĐŽ][a-zA-ZčćšđžČĆŠĐŽ\.\-]+)* [0-9]{1,4}[A-Za-z]?(, [A-ZČĆŠĐŽ][a-zA-ZčćšđžČĆŠĐŽ\.\-]+(\s[A-ZČĆŠĐŽ][a-zA-ZčćšđžČĆŠĐŽ\.\-]+)*)?$'
+    )
+);
